@@ -374,3 +374,66 @@ func (f Factory) NewUntypedFunc(opts prometheus.UntypedOpts, function func() flo
 	}
 	return u
 }
+
+type v2 struct{}
+
+// V2 is a struct that can be referenced to access experimental API that might
+// be present in v2 of client golang someday. It offers extended functionality
+// of v1 with slightly changed API. It is acceptable to use some pieces from v1
+// and e.g `prometheus.NewGauge` and some from v2 e.g. `prometheus.V2.NewDesc`
+// in the same codebase.
+var V2 = v2{}
+
+func (v2) NewCounterVec(opts prometheus.CounterVecOpts) *prometheus.CounterVec {
+	return V2.With(prometheus.DefaultRegisterer).NewCounterVec(opts)
+}
+
+func (v2) NewGaugeVec(opts prometheus.GaugeVecOpts) *prometheus.GaugeVec {
+	return V2.With(prometheus.DefaultRegisterer).NewGaugeVec(opts)
+}
+
+func (v2) NewSummaryVec(opts prometheus.SummaryVecOpts) *prometheus.SummaryVec {
+	return V2.With(prometheus.DefaultRegisterer).NewSummaryVec(opts)
+}
+
+func (v2) NewHistogramVec(opts prometheus.HistogramVecOpts) *prometheus.HistogramVec {
+	return V2.With(prometheus.DefaultRegisterer).NewHistogramVec(opts)
+}
+
+type Factoryv2 struct {
+	r prometheus.Registerer
+}
+
+func (v2) With(r prometheus.Registerer) Factoryv2 { return Factoryv2{r} }
+
+func (f Factoryv2) NewCounterVec(opts prometheus.CounterVecOpts) *prometheus.CounterVec {
+	c := prometheus.V2.NewCounterVec(opts)
+	if f.r != nil {
+		f.r.MustRegister(c)
+	}
+	return c
+}
+
+func (f Factoryv2) NewGaugeVec(opts prometheus.GaugeVecOpts) *prometheus.GaugeVec {
+	g := prometheus.V2.NewGaugeVec(opts)
+	if f.r != nil {
+		f.r.MustRegister(g)
+	}
+	return g
+}
+
+func (f Factoryv2) NewSummaryVec(opts prometheus.SummaryVecOpts) *prometheus.SummaryVec {
+	s := prometheus.V2.NewSummaryVec(opts)
+	if f.r != nil {
+		f.r.MustRegister(s)
+	}
+	return s
+}
+
+func (f Factoryv2) NewHistogramVec(opts prometheus.HistogramVecOpts) *prometheus.HistogramVec {
+	h := prometheus.V2.NewHistogramVec(opts)
+	if f.r != nil {
+		f.r.MustRegister(h)
+	}
+	return h
+}
